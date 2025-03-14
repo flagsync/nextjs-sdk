@@ -65,7 +65,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          registry-url: https://npm.pkg.github.com/
+          # Use the default npm registry for installation
+          registry-url: https://registry.npmjs.org/
 
       - uses: pnpm/action-setup@v2
         name: Install pnpm
@@ -78,6 +79,14 @@ jobs:
 
       - name: Build
         run: PRERELEASE=true pnpm build
+
+      # Then set up for publishing to GitHub
+      - name: Setup for GitHub Package Registry
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: https://npm.pkg.github.com/
+          scope: '@flagsync'
 
       - name: Publish
         run: |
