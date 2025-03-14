@@ -1,5 +1,3 @@
-export { createFlagSyncClient, createFlagSyncAdapter } from './adapter';
-
 export type {
   CustomAttributes,
   CustomAttributeValue,
@@ -10,3 +8,6 @@ export type {
 } from '@flagsync/node-sdk';
 
 export { SyncType } from '@flagsync/node-sdk';
+
+export * from './types';
+export { createFlagSyncClient, createFlagSyncAdapter } from './adapter';
