@@ -1,6 +1,6 @@
 {
   "name": "@flagsync/vercel-flags-sdk",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "FlagSync adapter for Vercel Flags",
   "author": "Mike Chabot",
   "license": "Apache-2.0",
