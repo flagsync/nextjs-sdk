@@ -9,5 +9,13 @@ export type {
 
 export { SyncType } from '@flagsync/node-sdk';
 
-export * from './types';
-export { createFlagSyncClient, createFlagSyncAdapter } from './adapter';
+export type { JsonObject } from './types';
+
+export {
+  createFlagSyncClient,
+  createFlagSyncAdapter,
+  createBoolFlagAdaptor,
+  createStringFlagAdaptor,
+  createJsonFlagAdaptor,
+  createNumberFlagAdaptor,
+} from './adapter';
