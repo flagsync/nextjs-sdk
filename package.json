@@ -1,0 +1,70 @@
+{
+  "name": "@flagsync/vercel-flags-sdk",
+  "version": "0.3.0",
+  "description": "FlagSync adapter for Vercel Flags",
+  "author": "Mike Chabot",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flagsync/vercel-flags-sdk"
+  },
+  "homepage": "https://www.flagsync.com",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "engines": {
+    "node": ">=16",
+    "npm": ">=6"
+  },
+  "scripts": {
+    "build": "tsup",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint \"src/**/*.ts\" --fix",
+    "test": "vitest"
+  },
+  "peerDependencies": {
+    "@vercel/edge-config": "^1.2.0",
+    "@vercel/flags": "^3.1.1"
+  },
+  "dependencies": {
+    "@flagsync/node-sdk": "^0.2.0"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
+    "@types/node": "^20.14.2",
+    "@types/semver": "^7.5.8",
+    "@typescript-eslint/eslint-plugin": "^8.26.1",
+    "@typescript-eslint/parser": "^8.26.1",
+    "@vercel/edge-config": "^1.2.0",
+    "@vercel/flags": "^3.1.1",
+    "eslint": "^9.22.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "prettier": "^3.5.3",
+    "replace-in-file": "^7.2.0",
+    "semver": "^7.7.1",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.1",
+    "vitest": "^3.0.8"
+  }
+}
