@@ -104,7 +104,12 @@ export default async function DashboardPage() {
 
 ## Type-Safe Feature Flags
 
-FlagSync supports multiple flag types for different use cases. Here are examples:
+FlagSync supports multiple flag types for different use cases. Use the type-specific adapter depending on your flag type: 
+
+- `createBoolFlagAdaptor`: For boolean flags
+- `createStringFlagAdaptor`: For string flags
+- `createNumberFlagAdaptor`: For numeric flags
+- `createJsonFlagAdaptor`: For JSON object flags
 
 ```typescript
 // app/<route>/flags.ts
@@ -120,21 +125,21 @@ import { flag } from '@vercel/flags';
 // Boolean flag for feature toggles
 export const betaFeatureFlag = flag<boolean>({
   identify,
-  key: 'beta-feature',
+  key: 'beta-feature-enabled',
   adapter: createBoolFlagAdaptor(client),
 });
 
 // String flag for UI variants
-export const uiVariantFlag = flag<string>({
+export const heroCtaFlag = flag<string>({
   identify,
-  key: 'ui-variant',
+  key: 'hero-cta',
   adapter: createStringFlagAdaptor(client),
 });
 
 // Number flag for pricing tiers
-export const pricingTierFlag = flag<number>({
+export const discountFlag = flag<number>({
   identify,
-  key: 'pricing-tier',
+  key: 'price-discount',
   adapter: createNumberFlagAdaptor(client),
 });
 
@@ -151,7 +156,7 @@ export const featureConfigFlag = flag<{
 
 ## Identify
 
-The `identify` function links feature flags to user contexts in FlagSync by returning an `FsUserContext` object:
+The `identify` function links feature flags to user contexts in FlagSync by returning an `FsUserContext` object.
 
 ```typescript
 type FsUserContext = {
@@ -161,6 +166,9 @@ type FsUserContext = {
 ```
 * `key`: A unique ID for the user (required)
 * `attributes`: Optional metadata (e.g., user agent, region, role, department) to personalize flag evaluations.
+
+> [!IMPORTANT]
+> User contexts enable personalized flag evaluations via [Individual Targeting](https://docs.flagsync.com/sdks/sdk-concepts/flag-evaluation#does-the-flag-have-any-individual-targeting-rules), and consistent experiences during [Percentage Rollouts](https://docs.flagsync.com/sdks/sdk-concepts/flag-evaluation#does-the-flag-have-a-percentage-rollout).
 
 We recommend:
 1. Using a helper function (getFlagSyncUserContext) to build the full context.
@@ -269,20 +277,7 @@ export const config = {
 - Configure flags in the [FlagSync dashboard](https://www.flagsync.com/dashboard).
 - Explore the [Docs](https://docs.flagsync.com/) for information on how to use FlagSync.
 
-## Reference
-
-### Available Adapters
-
-The SDK provides several type-specific adapters:
-
-- `createBoolFlagAdaptor`: For boolean flags
-- `createStringFlagAdaptor`: For string flags
-- `createNumberFlagAdaptor`: For numeric flags
-- `createJsonFlagAdaptor`: For JSON object flags
-
-Each adapter ensures type safety and proper handling of the respective flag type.
-
-### Environment Variables
+## Environment Variables
 
 Required environment variables:
 
