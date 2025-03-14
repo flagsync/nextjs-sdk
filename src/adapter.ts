@@ -1,19 +1,32 @@
-import { FlagSyncFactory, type FsUserContext } from '@flagsync/node-sdk';
+import {
+  FlagSyncFactory,
+  type FsUserContext,
+  type FsConfig,
+  FsClient,
+} from '@flagsync/node-sdk';
 import type { Adapter } from '@vercel/flags';
-import { FsConfig } from '@flagsync/node-sdk/dist';
 
-export function createFlagSyncAdapter(config: FsConfig) {
-  const factory = FlagSyncFactory({
+/**
+ * Create the FlagSync client. This should be created once as a singleton
+ * in your application, and passes to each "createFlagSyncAdapter" you
+ * create per flag.
+ * @param config
+ */
+export function createFlagSyncClient(config: FsConfig): FsClient {
+  const instance =  FlagSyncFactory({
     ...config,
     metadata: {
       sdkName: '__SDK_NAME__',
       sdkVersion: '__SDK_VERSION__',
     },
-  });
+  })
+  return instance.client()
+}
+
+
+export function createFlagSyncAdapter(client: FsClient) {
 
   let isReady = false;
-  const client = factory.client();
-
   const ensureReady = async () => {
     if (!isReady) {
       await client.waitForReady();
