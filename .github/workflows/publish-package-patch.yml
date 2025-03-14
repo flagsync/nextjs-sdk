@@ -65,7 +65,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          registry-url: https://npm.pkg.github.com/
+          # Use the default npm registry for installation
+          registry-url: https://registry.npmjs.org/
 
       - uses: pnpm/action-setup@v2
         name: Install pnpm
@@ -74,10 +75,18 @@ jobs:
           run_install: false
 
       - name: Install dependencies
-        run: PATCH=true pnpm install --no-frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build
-        run: pnpm build
+        run: PATCH=true pnpm build
+
+      # Then set up for publishing to GitHub
+      - name: Setup for GitHub Package Registry
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: https://npm.pkg.github.com/
+          scope: '@flagsync'
 
       - name: Publish
         run: |
