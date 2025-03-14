@@ -1,26 +1,26 @@
-# FlagSync SDK for Nest.js
+# FlagSync adapter for Vercel Flags
 
 At [FlagSync](https://www.flagsync.com), we believe the power of feature flags and A/B testing should be accessible to everyone, regardless of business size or budget.
 
 That's why we developed an affordable, user-friendly platform that delivers the core functionality needed by indie hackers and growing businesses, without unnecessary complexity. [Get started](https://docs.flagsync.com/getting-started/set-up-flagsync) using FlagSync today!
 
-[![npm version](https://badge.fury.io/js/%40flagsync%2Fnestjs-sdk.svg)](https://badge.fury.io/js/%40flagsync%2Fnestjs-sdk)
+[![npm version](https://badge.fury.io/js/%40flagsync%2Fvercel-flags-sdk.svg)](https://badge.fury.io/js/%40flagsync%2Fvercel-flags-sdk)
 [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/flagsync.svg?style=social&label=Follow%20%40flagsync)](https://twitter.com/flagsync)
 
 ---
 
 ## Compatibility
-* Requires [Nest.js](https://nestjs.com/) 10+
+* Requires [Next.js](https://nextjs.org/) 14+
 * Compatible with Node.js 16+ and ES5.
 * TypeScript is fully supported.
 
 ## Getting Started
 
-Refer to the [SDK documentation](https://docs.flagsync.com/sdks/nest.js) for more information on how to use this library.
+Refer to the [SDK documentation](https://docs.flagsync.com/sdks/next.js) for more information on how to use this library.
 
 ## Node
 
-This SDK wraps the [Node SDK](https://github.com/flagsync/node-client) for smoother integration with [Nest.js](https://nestjs.com/) applications. However, if you're building a non-Nest.js application for Node.js, you should use our [Node SDK](https://github.com/flagsync/node-client) instead.
+This SDK wraps the [Node SDK](https://github.com/flagsync/node-client) for smoother integration with [Next.js](https://nextjs.org/) App router. However, if you're building a non-Next.js application for Node.js, you should use our [Node SDK](https://github.com/flagsync/node-client) instead.
 
 # FlagSync Adapter for Vercel Flags
 
@@ -45,8 +45,7 @@ import { flags } from '@vercel/flags';
 import { FlagSyncAdapter } from '@flagsync/vercel-flags-sdk';
 
 const adapter = new FlagSyncAdapter({
-  sdkKey: process.env.FLAGSYNC_SDK_KEY,
-  environment: process.env.NODE_ENV,
+  sdkKey: process.env.FLAGSYNC_SDK_KEY
 });
 
 const client = flags({ adapter });
@@ -74,7 +73,6 @@ type FeatureFlags = {
 // Create a typed client
 const adapter = new FlagSyncAdapter({
   sdkKey: process.env.FLAGSYNC_SDK_KEY,
-  environment: process.env.NODE_ENV,
 });
 
 export const client = flags<FeatureFlags>({ adapter });
@@ -106,10 +104,12 @@ import { client } from './config';
 
 export async function middleware(request: NextRequest) {
   const isEnabled = await client.get('new-feature', {
-    headers: request.headers,
-    cookies: request.cookies,
     entities: {
-      userId: request.headers.get('x-user-id'),
+      key: request.headers.get('x-user-id'),
+      attributes: {
+        role: request.headers.get('x-user-role'),
+        department: request.headers.get('x-user-dept')
+      }
     },
   });
 
@@ -126,7 +126,6 @@ export async function middleware(request: NextRequest) {
 Make sure to set the following environment variables:
 
 - `FLAGSYNC_SDK_KEY`: Your FlagSync SDK key
-- `NODE_ENV`: Your environment (e.g., 'development', 'production')
 
 ## License
 
