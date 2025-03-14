@@ -46,7 +46,7 @@
     "@vercel/flags": "^3.1.1"
   },
   "dependencies": {
-    "@flagsync/node-sdk": "^0.2.0"
+    "@flagsync/node-sdk": "^0.2.1"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
