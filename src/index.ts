@@ -1,4 +1,4 @@
-export { createFlagSyncAdapter } from './adapter';
+export { createFlagSyncClient, createFlagSyncAdapter } from './adapter';
 
 export type {
   CustomAttributes,
