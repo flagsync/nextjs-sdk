@@ -19,3 +19,5 @@ export {
   createJsonFlagAdaptor,
   createNumberFlagAdaptor,
 } from './adapter';
+
+export { createIdentify } from './identify';
