@@ -1,132 +1,293 @@
-# FlagSync adapter for Vercel Flags
+# FlagSync Adapter for Vercel Flags
 
-At [FlagSync](https://www.flagsync.com), we believe the power of feature flags and A/B testing should be accessible to everyone, regardless of business size or budget.
-
-That's why we developed an affordable, user-friendly platform that delivers the core functionality needed by indie hackers and growing businesses, without unnecessary complexity. [Get started](https://docs.flagsync.com/getting-started/set-up-flagsync) using FlagSync today!
+[FlagSync](https://www.flagsync.com) brings affordable, user-friendly feature flags and A/B testing to indie hackers and growing businesses. This adapter integrates FlagSync with [Vercel Flags](https://vercel.com/docs/flags) in Next.js apps. [Get started](https://docs.flagsync.com/getting-started/set-up-flagsync) today!
 
 [![npm version](https://badge.fury.io/js/%40flagsync%2Fvercel-flags-sdk.svg)](https://badge.fury.io/js/%40flagsync%2Fvercel-flags-sdk)
-[![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/flagsync.svg?style=social&label=Follow%20%40flagsync)](https://twitter.com/flagsync)
+[![Twitter](https://img.shields.io/twitter/url/https/twitter.com/flagsync.svg?style=social&label=Follow%20%40flagsync)](https://twitter.com/flagsync)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 ---
-
-## Compatibility
-* Requires [Next.js](https://nextjs.org/) 14+
-* Compatible with Node.js 16+ and ES5.
-* TypeScript is fully supported.
 
 ## Getting Started
 
 Refer to the [SDK documentation](https://docs.flagsync.com/sdks/next.js) for more information on how to use this library.
 
-## Node
+### Compatibility
 
-This SDK wraps the [Node SDK](https://github.com/flagsync/node-client) for smoother integration with [Next.js](https://nextjs.org/) App router. However, if you're building a non-Next.js application for Node.js, you should use our [Node SDK](https://github.com/flagsync/node-client) instead.
+- Requires [Next.js](https://nextjs.org/) 14+
+- Compatible with Node.js 16+ and ES5.
+- TypeScript is fully supported.
+- **Note:** This SDK is optimized for Next.js App Router. For non-Next.js Node.js apps, use the [FlagSync Node SDK](https://github.com/flagsync/node-client) instead.
 
-# FlagSync Adapter for Vercel Flags
+### Prerequisites
+- Install the SDK: `npm install @flagsync/vercel-flags-sdk flags/next`
+- Set the `FLAGSYNC_SDK_KEY` environment variable in your `.env` file.
 
-This package provides a FlagSync adapter for Vercel Flags, allowing you to use FlagSync as your feature flag provider with Vercel's feature flag system.
+## Basic Setup
 
-## Installation
+FlagSync lets you toggle features and personalize experiences in your Next.js App Router application. Follow these steps to set it up.
 
-```bash
-npm install @flagsync/vercel-flags-sdk @vercel/flags
-# or
-yarn add @flagsync/vercel-flags-sdk @vercel/flags
-# or
-pnpm add @flagsync/vercel-flags-sdk @vercel/flags
-```
+### Step 1: Create the FlagSync client singleton
 
-## Usage
-
-### Basic Setup
+Initialize the client with your server-side SDK key:
 
 ```typescript
-import { flags } from '@vercel/flags';
-import { FlagSyncAdapter } from '@flagsync/vercel-flags-sdk';
+// lib/flagsync.ts
+import { createFlagSyncClient } from '@flagsync/vercel-flags-sdk';
 
-const adapter = new FlagSyncAdapter({
-  sdkKey: process.env.FLAGSYNC_SDK_KEY
+export const client = createFlagSyncClient({
+  sdkKey: process.env.FLAGSYNC_SDK_KEY!,
+});
+```
+
+### Step 2: Set up user identification
+
+> [!NOTE]
+> Feature flags in FlagSync use user context (e.g. via `identify`) to enable personalized experiences.
+
+The `identify` function defines how users are identified (e.g., via cookies, headers, or session data). See [Identify](#identify) for more details.
+
+```typescript
+// lib/flagsync.ts
+import {
+  createIdentify,
+  createFlagSyncClient,
+} from '@flagsync/vercel-flags-sdk';
+
+export const identify = createIdentify(({ cookies }) => {
+  const userId = cookies.get('user-id')?.value;       // Authenticated user ID
+  const visitorId = cookies.get('visitor-id')?.value; // Unauthenticated visitor ID
+  return {
+    key: userId ?? visitorId ?? 'anonymous'           // Fallback to 'anonymous'
+  };
+});
+```
+> [!CAUTION]
+> While `anonymous` user contexts are supported, always provide a unique identifier (even for unauthenticated users) to ensure consistent flag evaluation.
+> 
+> See [Identify](#identify) for more details.
+
+### Step 3: Define a feature flag
+
+Create a flag definition using the shared `client` and `identify` function:
+
+```typescript
+// app/dashboard/flags.ts
+import { flag } from 'flags/next';
+import { client, identify } from '@/lib/flagsync';
+import { createStringFlagAdaptor } from '@flagsync/vercel-flags-sdk';
+
+export const dashboardFlag = flag<string>({
+  identify,                                 // Links flag to user context
+  key: 'dashboardFlag',                     // Unique flag key
+  adapter: createStringFlagAdaptor(client), // Retrieves the flag with type safety
+});
+```
+
+### Step 4: Use the flag in your app
+
+Now you can use `dashboardFlag` in your Server Components:
+
+```typescript jsx
+// app/dashboard/page.tsx
+
+import { dashboardFlag } from '@/app/dashboard/flags';
+
+export default async function DashboardPage() {
+  const dashboard = await dashboardFlag();
+
+  return (
+    <div>The value of {dashboardFlag.key} is {dashboard}</div>
+  );
+}
+```
+
+## Type-Safe Feature Flags
+
+FlagSync supports multiple flag types for different use cases. Here are examples:
+
+```typescript
+// app/<route>/flags.ts
+import { client, identify } from '@/lib/flagsync';
+import {
+  createBoolFlagAdaptor,
+  createJsonFlagAdaptor,
+  createNumberFlagAdaptor,
+  createStringFlagAdaptor,
+} from '@flagsync/vercel-flags-sdk';
+import { flag } from '@vercel/flags';
+
+// Boolean flag for feature toggles
+export const betaFeatureFlag = flag<boolean>({
+  identify,
+  key: 'beta-feature',
+  adapter: createBoolFlagAdaptor(client),
 });
 
-const client = flags({ adapter });
+// String flag for UI variants
+export const uiVariantFlag = flag<string>({
+  identify,
+  key: 'ui-variant',
+  adapter: createStringFlagAdaptor(client),
+});
+
+// Number flag for pricing tiers
+export const pricingTierFlag = flag<number>({
+  identify,
+  key: 'pricing-tier',
+  adapter: createNumberFlagAdaptor(client),
+});
+
+// JSON flag for complex configurations
+export const featureConfigFlag = flag<{
+  enabled: boolean;
+  limits: { requests: number; storage: number };
+}>({
+  identify,
+  key: 'feature-config',
+  adapter: createJsonFlagAdaptor(client),
+});
 ```
 
-### With Type Safety
+## Identify
+
+The `identify` function links feature flags to user contexts in FlagSync by returning an `FsUserContext` object:
 
 ```typescript
-// config.ts
-import { flags } from '@vercel/flags';
-import { FlagSyncAdapter } from '@flagsync/vercel-flags-sdk';
+type FsUserContext = {
+  key: string;  // Unique identifier for the user
+  attributes?: Record<string, string | number | boolean>; // Optional custom data (used in individual targeting)
+};
+```
+* `key`: A unique ID for the user (required)
+* `attributes`: Optional metadata (e.g., user agent, region, role, department) to personalize flag evaluations.
 
-// Define your feature flag types
-type FeatureFlags = {
-  'new-feature': boolean;
-  'beta-feature': {
-    enabled: boolean;
-    config: {
-      maxUsers: number;
-      allowedRoles: string[];
-    };
+We recommend:
+1. Using a helper function (getFlagSyncUserContext) to build the full context.
+2. Setting cookies in middleware for the key.
+
+Here's how:
+
+### Step 1: Define a helper function
+
+Create a utility to build the user context:
+
+```typescript
+// lib/flagsync.user-context.ts
+import type { ReadonlyRequestCookies, ReadonlyHeaders } from 'flags';
+import { dedupe } from 'flags/next';
+import { nanoid } from 'nanoid';
+import type { NextRequest } from 'next/server';
+
+const generateId = dedupe(async () => nanoid());
+
+export const getFlagSyncUserContext = async (
+  cookies: ReadonlyRequestCookies | NextRequest['cookies'],
+  headers: ReadonlyHeaders | NextRequest['headers'],
+) => {
+  const userId = cookies.get('user-id')?.value; // Authenticated user
+  const visitorId = cookies.get('visitor-id')?.value; // Anonymous visitor
+
+  return {
+    key: userId ?? visitorId ?? (await generateId()), // Fallback to new ID
+    attributes: {
+      userAgent: headers.get('user-agent') || 'unknown', // Browser info
+      region: headers.get('x-region-code') || 'default', // Custom header
+    },
   };
 };
 
-// Create a typed client
-const adapter = new FlagSyncAdapter({
-  sdkKey: process.env.FLAGSYNC_SDK_KEY,
+```
+### Step 2: Set up identification
+
+Use the helper in `identify`:
+
+```typescript
+// lib/flagsync.ts
+import { createIdentify, createFlagSyncClient } from '@flagsync/vercel-flags-sdk';
+import { getFlagSyncUserContext } from '@lib/flagsync.user-context';
+
+export const identify = createIdentify(({ cookies, headers }) => {
+  return getFlagSyncUserContext(cookies, headers);
 });
 
-export const client = flags<FeatureFlags>({ adapter });
+export const client = createFlagSyncClient({
+  sdkKey: process.env.FLAGSYNC_SDK_KEY!,
+});
 ```
 
-### In React Components
+### Step 3: Handle cookies in middleware
 
 ```typescript
-import { useFlags } from '@vercel/flags';
-import type { FeatureFlags } from './config';
-
-function MyComponent() {
-  const flags = useFlags<FeatureFlags>();
-
-  if (flags['new-feature']) {
-    return <div>New Feature Enabled!</div>;
-  }
-
-  return <div>Default View</div>;
-}
-```
-
-### In Next.js Middleware
-
-```typescript
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { client } from './config';
+// middleware.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { nanoid } from 'nanoid';
 
 export async function middleware(request: NextRequest) {
-  const isEnabled = await client.get('new-feature', {
-    entities: {
-      key: request.headers.get('x-user-id'),
-      attributes: {
-        role: request.headers.get('x-user-role'),
-        department: request.headers.get('x-user-dept')
-      }
-    },
-  });
+  const response = NextResponse.next();
 
-  if (!isEnabled) {
-    return NextResponse.redirect(new URL('/not-available', request.url));
+  // Example: Get userId from a JWT or API call (replace with your logic)
+  const jwt = request.cookies.get('jwt')?.value;
+  let userId: string | undefined;
+  if (jwt) {
+    userId = 'user@example.com'; // Stub: e.g., await decodeJwt(jwt).email
   }
 
-  return NextResponse.next();
+  if (userId) {
+    response.cookies.set('user-id', userId, { maxAge: 60 * 60 * 24 * 7 });
+  } else {
+    const visitorId = request.cookies.get('visitor-id')?.value ?? nanoid();
+    response.cookies.set('visitor-id', visitorId, { maxAge: 60 * 60 * 24 * 365 });
+  }
+
+  return response;
 }
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    {
+      source: '/((?!api|_next/static|_next/image|favicon.ico).*)',
+      missing: [
+        { type: 'header', key: 'next-router-prefetch' },
+        { type: 'header', key: 'purpose', value: 'prefetch' },
+      ],
+    },
+  ],
+};
+
 ```
 
-## Environment Variables
+## Next Steps
 
-Make sure to set the following environment variables:
+- Configure flags in the [FlagSync dashboard](https://www.flagsync.com/dashboard).
+- Explore the [Docs](https://docs.flagsync.com/) for information on how to use FlagSync.
 
-- `FLAGSYNC_SDK_KEY`: Your FlagSync SDK key
+## Reference
 
-## License
+### Available Adapters
 
-Apache-2.0
+The SDK provides several type-specific adapters:
+
+- `createBoolFlagAdaptor`: For boolean flags
+- `createStringFlagAdaptor`: For string flags
+- `createNumberFlagAdaptor`: For numeric flags
+- `createJsonFlagAdaptor`: For JSON object flags
+
+Each adapter ensures type safety and proper handling of the respective flag type.
+
+### Environment Variables
+
+Required environment variables:
+
+- `FLAGSYNC_SDK_KEY`: Your server-side FlagSync SDK key (required)
+
+### License
+
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
