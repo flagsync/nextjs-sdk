@@ -1,9 +1,10 @@
 import { FlagSyncFactory, type FsUserContext } from '@flagsync/node-sdk';
 import type { Adapter } from '@vercel/flags';
+import { FsConfig } from '@flagsync/node-sdk/dist';
 
-export function createFlagSyncAdapter(sdkKey: string) {
+export function createFlagSyncAdapter(config: FsConfig) {
   const factory = FlagSyncFactory({
-    sdkKey,
+    ...config,
     metadata: {
       sdkName: '__SDK_NAME__',
       sdkVersion: '__SDK_VERSION__',
