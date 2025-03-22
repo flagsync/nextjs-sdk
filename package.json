@@ -1,12 +1,12 @@
 {
-  "name": "@flagsync/vercel-flags-sdk",
+  "name": "@flagsync/nextjs-sdk",
   "version": "0.2.5",
-  "description": "FlagSync adapter for Vercel Flags",
+  "description": "FlagSync adapter for Vercel's Flags SDK",
   "author": "Mike Chabot",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/flagsync/vercel-flags-sdk"
+    "url": "https://github.com/flagsync/nextjs-sdk"
   },
   "homepage": "https://www.flagsync.com",
   "type": "module",
@@ -42,7 +42,6 @@
     "test": "vitest"
   },
   "peerDependencies": {
-    "@vercel/edge-config": "^1.2.0",
     "@vercel/flags": "^3.1.1"
   },
   "dependencies": {
@@ -54,7 +53,6 @@
     "@types/semver": "^7.5.8",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "@typescript-eslint/parser": "^8.26.1",
-    "@vercel/edge-config": "^1.2.0",
     "@vercel/flags": "^3.1.1",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",

@@ -60,23 +60,7 @@ export function createFlagSyncAdapter(client: FsClient) {
           ...(entities ?? {}),
         };
 
-        const flagValue = client.flag<ValueType>(userContext, key);
-
-        /**
-         * The "decide" function's return type is strictly typed as ValueType | Promise<ValueType>,
-         * meaning it expects a concrete value (or a promise resolving to one) and doesn't allow undefined.
-         * However, the defaultValue defined on the adaptor configuration will only return if
-         * "decide" throws, or returns undefined, so we have to cast "undefined as ValueType"
-         * to satisfy TypeScript.
-         *
-         * "client.flag" does take a third argument, which can serve as the default value, but we're
-         * relying on the adaptor configuration instead.
-         */
-        if (flagValue === 'control') {
-          return undefined as ValueType;
-        }
-
-        return flagValue as ValueType;
+        return client.flag<ValueType>(userContext, key);
       },
     };
   };
