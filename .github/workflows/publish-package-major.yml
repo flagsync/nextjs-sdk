@@ -1,0 +1,107 @@
+name: Publish Package (Major)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          registry-url: https://registry.npmjs.org
+
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: 10.12.1
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build
+        run: MAJOR=true pnpm build
+
+      - name: Publish
+        run: |
+          git config --global user.name 'Mike Chabot'
+          git config --global user.email 'mikechabot@users.noreply.github.com'
+          npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
+          pnpm version major
+          pnpm pack
+          pnpm publish --no-git-checks --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-github:
+    needs: publish-npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          # Use the default npm registry for installation
+          registry-url: https://registry.npmjs.org/
+
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: 10.12.1
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build
+        run: MAJOR=true pnpm build
+
+      # Then set up for publishing to GitHub
+      - name: Setup for GitHub Package Registry
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: https://npm.pkg.github.com/
+          scope: '@flagsync'
+
+      - name: Publish
+        run: |
+          git config --local user.email "mikechabot@users.noreply.github.com"
+          git config --local user.name "Mike Chabot"
+          pnpm version major
+          git add .
+          pnpm pack
+          pnpm publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # See https://github.com/ad-m/github-push-action
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

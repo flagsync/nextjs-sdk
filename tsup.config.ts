@@ -30,6 +30,10 @@ function getAnticipatedVersion(): string {
 
   console.log(`[build] current version tag: ${current}`);
 
+  if (process.env.MAJOR === 'true') {
+    console.log(`[build] bumping major`);
+    return semver.inc(current, 'major')!;
+  }
   if (process.env.MINOR === 'true') {
     console.log(`[build] bumping minor`);
     return semver.inc(current, 'minor')!;
