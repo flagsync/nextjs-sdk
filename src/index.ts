@@ -5,6 +5,8 @@ export type {
   FsClient,
   LogLevel,
   FsUserContext,
+  FeatureFlags,
+  FlagKey,
 } from '@flagsync/node-sdk';
 
 export { SyncType } from '@flagsync/node-sdk';
