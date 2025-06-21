@@ -1,5 +1,5 @@
 import { FsUserContext } from '@flagsync/node-sdk';
-import { Identify } from '@vercel/flags';
+import { Identify } from 'flags';
 
 type ExtractParams<T> = T extends (params: infer P) => any ? P : never;
 

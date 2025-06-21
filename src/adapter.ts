@@ -1,12 +1,16 @@
 import {
+  FeatureFlags,
+  FlagKey,
   FlagSyncFactory,
   FsClient,
   type FsConfig,
   type FsUserContext,
 } from '@flagsync/node-sdk';
-import type { Adapter } from '@vercel/flags';
+import type { Adapter } from 'flags';
 
-import { JsonObject } from './types';
+export type TypedFeatureFlags = keyof FeatureFlags extends never
+  ? Record<string, unknown>
+  : { [K in keyof FeatureFlags]: FeatureFlags[K] };
 
 /**
  * Creates a FlagSync client instance that can be used across multiple feature flags.
@@ -44,15 +48,15 @@ export function createFlagSyncAdapter(client: FsClient) {
   /**
    * Creates a typed adapter instance for a specific flag value type.
    */
-  return function flagSyncAdapter<ValueType>(): Adapter<
-    ValueType,
+  return function flagSyncAdapter<Key extends FlagKey>(): Adapter<
+    TypedFeatureFlags[Key],
     FsUserContext
   > {
     return {
       /**
        * Evaluates a feature flag for a given context and returns its value.
        */
-      async decide({ key, entities }) {
+      async decide({ key, entities, defaultValue }) {
         await ensureReady();
 
         const userContext: FsUserContext = {
@@ -60,29 +64,12 @@ export function createFlagSyncAdapter(client: FsClient) {
           ...(entities ?? {}),
         };
 
-        return client.flag<ValueType>(userContext, key);
+        return client.flag<Key>(
+          userContext,
+          key as Key,
+          defaultValue,
+        ) as TypedFeatureFlags[Key];
       },
     };
   };
 }
-
-/** Creates an adapter for string-typed flags */
-export const createStringFlagAdaptor = (
-  client: FsClient,
-): Adapter<string, FsUserContext> => createFlagSyncAdapter(client)<string>();
-
-/** Creates an adapter for boolean-typed flags */
-export const createBoolFlagAdaptor = (
-  client: FsClient,
-): Adapter<boolean, FsUserContext> => createFlagSyncAdapter(client)<boolean>();
-
-/** Creates an adapter for number-typed flags */
-export const createNumberFlagAdaptor = (
-  client: FsClient,
-): Adapter<number, FsUserContext> => createFlagSyncAdapter(client)<number>();
-
-/** Creates an adapter for JSON object-typed flags */
-export const createJsonFlagAdaptor = (
-  client: FsClient,
-): Adapter<JsonObject, FsUserContext> =>
-  createFlagSyncAdapter(client)<JsonObject>();
