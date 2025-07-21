@@ -1,16 +1,10 @@
 import {
-  FeatureFlags,
-  FlagKey,
   FlagSyncFactory,
   FsClient,
   type FsConfig,
   type FsUserContext,
 } from '@flagsync/node-sdk';
-import type { Adapter } from 'flags';
-
-export type TypedFeatureFlags = keyof FeatureFlags extends never
-  ? Record<string, unknown>
-  : { [K in keyof FeatureFlags]: FeatureFlags[K] };
+import { Adapter } from 'flags';
 
 /**
  * Creates a FlagSync client instance that can be used across multiple feature flags.
@@ -46,17 +40,20 @@ export function createFlagSyncAdapter(client: FsClient) {
   };
 
   /**
-   * Creates a typed adapter instance for a specific flag value type.
+   * Creates a generic adapter instance that works with any flag.
+   * This adapter will handle type inference based on usage context.
    */
-  return function flagSyncAdapter<Key extends FlagKey>(): Adapter<
-    TypedFeatureFlags[Key],
-    FsUserContext
-  > {
+  function flagSyncAdapter<T = any>(): Adapter<T, FsUserContext> {
     return {
-      /**
-       * Evaluates a feature flag for a given context and returns its value.
-       */
-      async decide({ key, entities, defaultValue }) {
+      async decide({
+        key,
+        entities,
+        defaultValue,
+      }: {
+        key: string;
+        entities?: FsUserContext;
+        defaultValue?: T;
+      }): Promise<T> {
         await ensureReady();
 
         const userContext: FsUserContext = {
@@ -64,12 +61,10 @@ export function createFlagSyncAdapter(client: FsClient) {
           ...(entities ?? {}),
         };
 
-        return client.flag<Key>(
-          userContext,
-          key as Key,
-          defaultValue,
-        ) as TypedFeatureFlags[Key];
+        return client.flag<T>(userContext, key, defaultValue);
       },
     };
-  };
+  }
+
+  return flagSyncAdapter;
 }

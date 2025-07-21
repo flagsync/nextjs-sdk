@@ -45,7 +45,7 @@
     "flags": "^4.0.1"
   },
   "dependencies": {
-    "@flagsync/node-sdk": "^0.5.1"
+    "@flagsync/node-sdk": "^0.6.0"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
