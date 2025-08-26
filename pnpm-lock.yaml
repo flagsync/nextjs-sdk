@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@flagsync/node-sdk':
-        specifier: 0.7.1
-        version: 0.7.1
+        specifier: 0.7.2-alpha.0
+        version: 0.7.2-alpha.0
       flags:
         specifier: ^4.0.1
         version: 4.0.1
@@ -292,8 +292,8 @@ packages:
     resolution: {integrity: sha512-4SaFZCNfJqvk/kenHpI8xvN42DMaoycy4PzKc5otHxRswww1kAt82OlBuwRVLofCACCTZEcla2Ydxv8scMXaTg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@flagsync/node-sdk@0.7.1':
-    resolution: {integrity: sha512-24chBbGYw2/Jqopa4tGHhW6HSZjKPJIuusoWVQ05Fi25GM52Xp1FiTTQyFrpsWC7NI1GIvDBKhA0/PwgkUh9xQ==}
+  '@flagsync/node-sdk@0.7.2-alpha.0':
+    resolution: {integrity: sha512-IBBIwl/wDHvuoqHkmefjEsKAmLrD9OM8c0wMj/3Sv0seVjfUuQxSCPHggtmmCKQMo2Va2cru9pkaAT2Q/S5GUw==}
     engines: {node: '>=16', npm: '>=6'}
 
   '@humanfs/core@0.19.1':
@@ -1771,7 +1771,7 @@ snapshots:
       '@eslint/core': 0.15.0
       levn: 0.4.1
 
-  '@flagsync/node-sdk@0.7.1':
+  '@flagsync/node-sdk@0.7.2-alpha.0':
     dependencies:
       axios: 1.10.0
       deepmerge: 4.3.1
