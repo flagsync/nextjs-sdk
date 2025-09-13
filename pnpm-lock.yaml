@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@flagsync/node-sdk':
-        specifier: 0.8.1
-        version: 0.8.1
+        specifier: 0.8.3
+        version: 0.8.3
       flags:
         specifier: ^4.0.1
         version: 4.0.1
@@ -305,9 +305,9 @@ packages:
     resolution: {integrity: sha512-4SaFZCNfJqvk/kenHpI8xvN42DMaoycy4PzKc5otHxRswww1kAt82OlBuwRVLofCACCTZEcla2Ydxv8scMXaTg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@flagsync/node-sdk@0.8.1':
-    resolution: {integrity: sha512-LVOKeQZyp7PraG0mB2BYJxJMW1JgBWPQe+CUODLTu/03QpFyBZcOFYvPgt1UX4BmA2r4Yc4FC9aOwRzthO8zGg==}
-    engines: {node: '>=16', npm: '>=6'}
+  '@flagsync/node-sdk@0.8.3':
+    resolution: {integrity: sha512-6t5NxqnK2WGKOI+bmetoulhtU3zxphRseHmhcAzANC6ZlYMg044Tmt7K1hYQLT8LjNHhnZf1pUovREy2fCdPAQ==}
+    engines: {node: '>=18', npm: '>=6'}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -1709,7 +1709,7 @@ snapshots:
       '@eslint/core': 0.15.0
       levn: 0.4.1
 
-  '@flagsync/node-sdk@0.8.1':
+  '@flagsync/node-sdk@0.8.3':
     dependencies:
       deepmerge: 4.3.1
       eventemitter3: 5.0.1
