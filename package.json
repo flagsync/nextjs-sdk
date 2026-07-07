@@ -45,7 +45,7 @@
     "flags": "^4.0.1"
   },
   "dependencies": {
-    "@flagsync/node-sdk": "0.8.4-alpha.0"
+    "@flagsync/node-sdk": "0.9.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

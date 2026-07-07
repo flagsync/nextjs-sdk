@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@flagsync/node-sdk':
-        specifier: 0.8.4-alpha.0
-        version: 0.8.4-alpha.0
+        specifier: 0.9.0
+        version: 0.9.0
       flags:
         specifier: ^4.0.1
         version: 4.0.1
@@ -305,8 +305,8 @@ packages:
     resolution: {integrity: sha512-4SaFZCNfJqvk/kenHpI8xvN42DMaoycy4PzKc5otHxRswww1kAt82OlBuwRVLofCACCTZEcla2Ydxv8scMXaTg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@flagsync/node-sdk@0.8.4-alpha.0':
-    resolution: {integrity: sha512-HK5ZRuDyQC6BSG3d5zgAzR4gLYDEnAm3bbKD8ATqUWUC8/M4p8eVftqN5C+O9fkTv3HKl2lRhgHxhGDUs+H1AQ==}
+  '@flagsync/node-sdk@0.9.0':
+    resolution: {integrity: sha512-zFjSThSEsEP8hZMKFnkykorkvM7O3rknm/LzGBJ72rHzf1X7LQRcG8r14z9zQIe+3clxv1UsfFhel8X1metnKg==}
     engines: {node: '>=18', npm: '>=6'}
 
   '@humanfs/core@0.19.1':
@@ -1709,7 +1709,7 @@ snapshots:
       '@eslint/core': 0.15.0
       levn: 0.4.1
 
-  '@flagsync/node-sdk@0.8.4-alpha.0':
+  '@flagsync/node-sdk@0.9.0':
     dependencies:
       deepmerge: 4.3.1
       eventemitter3: 5.0.1
