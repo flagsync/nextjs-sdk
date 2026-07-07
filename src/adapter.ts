@@ -11,10 +11,34 @@ import { Adapter, FlagDeclaration } from 'flags';
 import { flag } from 'flags/next';
 
 /**
+ * Clients are cached on globalThis, keyed by SDK key, so they survive module
+ * re-evaluation — Next.js dev HMR and multiple server bundles importing this
+ * module would otherwise each construct a fresh client, leaking sync
+ * connections (each with default settings if their call site differs).
+ * Symbol.for() resolves to the same symbol across bundles in one process.
+ */
+const CLIENT_CACHE_KEY = Symbol.for('@flagsync/nextjs-sdk:clients');
+
+function getClientCache(): Map<string, FsClient> {
+  const store = globalThis as { [CLIENT_CACHE_KEY]?: Map<string, FsClient> };
+  store[CLIENT_CACHE_KEY] ??= new Map();
+  return store[CLIENT_CACHE_KEY];
+}
+
+/**
  * Creates a FlagSync client instance that can be used across multiple feature flags.
- * This function should be called once to create a singleton client for your application.
+ * Returns the same instance for repeated calls with the same SDK key, even
+ * across HMR reloads — note this means config changes for an existing SDK key
+ * only take effect after a server restart.
  */
 export function createClient(config: FsConfig): FsClient {
+  const cache = getClientCache();
+
+  const existing = cache.get(config.sdkKey);
+  if (existing) {
+    return existing;
+  }
+
   const instance = FlagSyncFactory({
     ...config,
     metadata: {
@@ -22,7 +46,10 @@ export function createClient(config: FsConfig): FsClient {
       sdkVersion: '__SDK_VERSION__',
     },
   });
-  return instance.client();
+
+  const client = instance.client();
+  cache.set(config.sdkKey, client);
+  return client;
 }
 
 /**
