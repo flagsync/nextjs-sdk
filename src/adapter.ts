@@ -11,10 +11,98 @@ import { Adapter, FlagDeclaration } from 'flags';
 import { flag } from 'flags/next';
 
 /**
+ * Clients are cached on globalThis, keyed by SDK key, so they survive module
+ * re-evaluation — Next.js dev HMR and multiple server bundles importing this
+ * module would otherwise each construct a fresh client, leaking sync
+ * connections (each with default settings if their call site differs).
+ * Symbol.for() resolves to the same symbol across bundles in one process.
+ */
+const CLIENT_CACHE_KEY = Symbol.for('@flagsync/nextjs-sdk:clients');
+
+interface CachedClient {
+  client: FsClient;
+  configFingerprint: string;
+}
+
+function getClientCache(): Map<string, CachedClient> {
+  const store = globalThis as {
+    [CLIENT_CACHE_KEY]?: Map<string, CachedClient>;
+  };
+  store[CLIENT_CACHE_KEY] ??= new Map();
+  return store[CLIENT_CACHE_KEY];
+}
+
+/**
+ * Serializable view of the config, used only to detect (and warn about)
+ * config changes that cannot apply to an already-cached client. Functions
+ * (loggers, etc.) are omitted by JSON.stringify; key order follows the
+ * caller's object literal, which is stable for a given call site.
+ */
+function fingerprintConfig(config: FsConfig): string {
+  try {
+    return JSON.stringify(config);
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Top-level config fields whose values differ between two fingerprints,
+ * so the warning can say what changed instead of just that something did.
+ */
+function diffConfigKeys(before: string, after: string): string[] {
+  try {
+    const prev = JSON.parse(before) as Record<string, unknown>;
+    const next = JSON.parse(after) as Record<string, unknown>;
+    const keys = new Set([...Object.keys(prev), ...Object.keys(next)]);
+    return [...keys].filter(
+      (key) => JSON.stringify(prev[key]) !== JSON.stringify(next[key]),
+    );
+  } catch {
+    return [];
+  }
+}
+
+function warnStaleConfig(changedKeys: string[]) {
+  // Color only when stderr is a terminal, so piped logs stay clean.
+  const isTty = Boolean(process.stderr?.isTTY);
+  const yellow = isTty ? '\x1b[33;1m' : '';
+  const reset = isTty ? '\x1b[0m' : '';
+  const changed =
+    changedKeys.length > 0 ? changedKeys.join(', ') : '(unknown)';
+
+  console.warn(
+    `${yellow}\n` +
+      `⚠️  [flagsync] ═══════════════════════════════════════════════════\n` +
+      `    CONFIG CHANGE IGNORED\n` +
+      `    A client for this SDK key already exists and was reused.\n` +
+      `    Changed field(s): ${changed}\n` +
+      `    Restart the dev server to apply the new config.\n` +
+      `═══════════════════════════════════════════════════════════════════${reset}`,
+  );
+}
+
+/**
  * Creates a FlagSync client instance that can be used across multiple feature flags.
- * This function should be called once to create a singleton client for your application.
+ * Returns the same instance for repeated calls with the same SDK key, even
+ * across HMR reloads — note this means config changes for an existing SDK key
+ * only take effect after a server restart.
  */
 export function createClient(config: FsConfig): FsClient {
+  const cache = getClientCache();
+
+  const existing = cache.get(config.sdkKey);
+  if (existing) {
+    const fingerprint = fingerprintConfig(config);
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      existing.configFingerprint !== fingerprint
+    ) {
+      warnStaleConfig(diffConfigKeys(existing.configFingerprint, fingerprint));
+    }
+    return existing.client;
+  }
+
   const instance = FlagSyncFactory({
     ...config,
     metadata: {
@@ -22,7 +110,13 @@ export function createClient(config: FsConfig): FsClient {
       sdkVersion: '__SDK_VERSION__',
     },
   });
-  return instance.client();
+
+  const client = instance.client();
+  cache.set(config.sdkKey, {
+    client,
+    configFingerprint: fingerprintConfig(config),
+  });
+  return client;
 }
 
 /**
