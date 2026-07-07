@@ -19,10 +19,31 @@ import { flag } from 'flags/next';
  */
 const CLIENT_CACHE_KEY = Symbol.for('@flagsync/nextjs-sdk:clients');
 
-function getClientCache(): Map<string, FsClient> {
-  const store = globalThis as { [CLIENT_CACHE_KEY]?: Map<string, FsClient> };
+interface CachedClient {
+  client: FsClient;
+  configFingerprint: string;
+}
+
+function getClientCache(): Map<string, CachedClient> {
+  const store = globalThis as {
+    [CLIENT_CACHE_KEY]?: Map<string, CachedClient>;
+  };
   store[CLIENT_CACHE_KEY] ??= new Map();
   return store[CLIENT_CACHE_KEY];
+}
+
+/**
+ * Serializable view of the config, used only to detect (and warn about)
+ * config changes that cannot apply to an already-cached client. Functions
+ * (loggers, etc.) are omitted by JSON.stringify; key order follows the
+ * caller's object literal, which is stable for a given call site.
+ */
+function fingerprintConfig(config: FsConfig): string {
+  try {
+    return JSON.stringify(config);
+  } catch {
+    return '';
+  }
 }
 
 /**
@@ -36,7 +57,17 @@ export function createClient(config: FsConfig): FsClient {
 
   const existing = cache.get(config.sdkKey);
   if (existing) {
-    return existing;
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      existing.configFingerprint !== fingerprintConfig(config)
+    ) {
+      console.warn(
+        '[flagsync] createClient was called with a changed config, but a ' +
+          'client for this SDK key already exists and will be reused. ' +
+          'Restart the dev server to apply the new config.',
+      );
+    }
+    return existing.client;
   }
 
   const instance = FlagSyncFactory({
@@ -48,7 +79,10 @@ export function createClient(config: FsConfig): FsClient {
   });
 
   const client = instance.client();
-  cache.set(config.sdkKey, client);
+  cache.set(config.sdkKey, {
+    client,
+    configFingerprint: fingerprintConfig(config),
+  });
   return client;
 }
 
