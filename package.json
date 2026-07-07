@@ -1,6 +1,6 @@
 {
   "name": "@flagsync/nextjs-sdk",
-  "version": "0.8.5",
+  "version": "0.8.6-alpha.0",
   "description": "FlagSync adapter for Vercel's Flags SDK",
   "author": "Mike Chabot",
   "license": "Apache-2.0",
@@ -45,7 +45,7 @@
     "flags": "^4.0.1"
   },
   "dependencies": {
-    "@flagsync/node-sdk": "0.8.3"
+    "@flagsync/node-sdk": "0.8.4-alpha.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
