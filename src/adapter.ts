@@ -62,9 +62,15 @@ export function createClient(config: FsConfig): FsClient {
       existing.configFingerprint !== fingerprintConfig(config)
     ) {
       console.warn(
+        '***************************************************************',
+      );
+      console.warn(
         '[flagsync] createClient was called with a changed config, but a ' +
           'client for this SDK key already exists and will be reused. ' +
           'Restart the dev server to apply the new config.',
+      );
+      console.warn(
+        '***************************************************************',
       );
     }
     return existing.client;
