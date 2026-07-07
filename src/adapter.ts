@@ -47,6 +47,42 @@ function fingerprintConfig(config: FsConfig): string {
 }
 
 /**
+ * Top-level config fields whose values differ between two fingerprints,
+ * so the warning can say what changed instead of just that something did.
+ */
+function diffConfigKeys(before: string, after: string): string[] {
+  try {
+    const prev = JSON.parse(before) as Record<string, unknown>;
+    const next = JSON.parse(after) as Record<string, unknown>;
+    const keys = new Set([...Object.keys(prev), ...Object.keys(next)]);
+    return [...keys].filter(
+      (key) => JSON.stringify(prev[key]) !== JSON.stringify(next[key]),
+    );
+  } catch {
+    return [];
+  }
+}
+
+function warnStaleConfig(changedKeys: string[]) {
+  // Color only when stderr is a terminal, so piped logs stay clean.
+  const isTty = Boolean(process.stderr?.isTTY);
+  const yellow = isTty ? '\x1b[33;1m' : '';
+  const reset = isTty ? '\x1b[0m' : '';
+  const changed =
+    changedKeys.length > 0 ? changedKeys.join(', ') : '(unknown)';
+
+  console.warn(
+    `${yellow}\n` +
+      `⚠️  [flagsync] ═══════════════════════════════════════════════════\n` +
+      `    CONFIG CHANGE IGNORED\n` +
+      `    A client for this SDK key already exists and was reused.\n` +
+      `    Changed field(s): ${changed}\n` +
+      `    Restart the dev server to apply the new config.\n` +
+      `═══════════════════════════════════════════════════════════════════${reset}`,
+  );
+}
+
+/**
  * Creates a FlagSync client instance that can be used across multiple feature flags.
  * Returns the same instance for repeated calls with the same SDK key, even
  * across HMR reloads — note this means config changes for an existing SDK key
@@ -57,21 +93,12 @@ export function createClient(config: FsConfig): FsClient {
 
   const existing = cache.get(config.sdkKey);
   if (existing) {
+    const fingerprint = fingerprintConfig(config);
     if (
       process.env.NODE_ENV !== 'production' &&
-      existing.configFingerprint !== fingerprintConfig(config)
+      existing.configFingerprint !== fingerprint
     ) {
-      console.warn(
-        '***************************************************************',
-      );
-      console.warn(
-        '[flagsync] createClient was called with a changed config, but a ' +
-          'client for this SDK key already exists and will be reused. ' +
-          'Restart the dev server to apply the new config.',
-      );
-      console.warn(
-        '***************************************************************',
-      );
+      warnStaleConfig(diffConfigKeys(existing.configFingerprint, fingerprint));
     }
     return existing.client;
   }
